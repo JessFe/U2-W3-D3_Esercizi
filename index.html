@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Books - Esercizio API</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Carrello</h2>
+      <ul id="cart"></ul>
+      <div class="row" id="booksList"></div>
+    </div>
+    <script>
+      const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+
+      function addToCart(title, price) {
+        const cartItem = { title, price };
+        cartItems.push(cartItem);
+
+        // agg cart nello storage del browser
+        localStorage.setItem("cart", JSON.stringify(cartItems));
+
+        // agg cart
+        updateCartUI();
+      }
+
+      function updateCartUI() {
+        const cartList = document.getElementById("cart");
+        cartList.innerHTML = "";
+
+        // visualizz cart
+        cartItems.forEach((item) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = `${item.title} - ${item.price}`;
+          cartList.appendChild(listItem);
+        });
+      }
+
+      fetch("https://striveschool-api.herokuapp.com/books")
+        .then((responseObj) => {
+          if (responseObj.ok) {
+            return responseObj.json();
+          }
+        })
+        .then((booksObj) => {
+          booksObj.forEach((book) => {
+            const booksList = document.getElementById("booksList");
+            const card = document.createElement("div");
+            card.classList.add("card-group", "col-3", "mb-4");
+
+            card.innerHTML = `
+              <div class="card">
+                <img src="${book.img}" class="card-img-top" alt="book cover">
+                <div class="card-body">
+                  <h5 class="card-title">${book.title}</h5>
+                  <p class="card-text">$ ${book.price}</p>
+                  <button class="btn btn-danger" onclick="discardCard(this)">Scarta</button>
+                  <button class="btn btn-primary" onclick="addToCart('${book.title}', '${book.price}')">Compra ora</button>
+                </div>
+              </div>
+            `;
+
+            booksList.appendChild(card);
+          });
+        })
+        .catch((error) => console.log(error));
+
+      function discardCard(button) {
+        const card = button.closest(".col-3");
+        card.remove();
+      }
+
+      updateCartUI();
+    </script>
+  </body>
+</html>
